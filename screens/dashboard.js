@@ -1,0 +1,18 @@
+/* Dashboard screen renderer. Shared state and helpers are defined in app.js. */
+function dashboard(){
+ const low=data.products.filter(p=>p.qty<p.min);
+ const stockHealth=data.products.length?Math.round(data.products.filter(p=>p.qty>=p.min).length/data.products.length*100):0;
+ const pending=data.orders.filter(o=>o.status!=='Completed');
+ const products=data.products.slice(0,5);
+ const events=data.deliveries.filter(d=>d.status==='Scheduled').slice(0,3);
+ return heading('Warehouse Dashboard',"Welcome back! Here’s what’s happening today.",'')+
+ `<div class="cards dashboard-metrics">${card('Pending Orders',pending.length,ico('orders'),'orders')}${card('Total Orders',data.orders.length,ico('reports'),'orders')}${card('Stock Health',stockHealth+'%','✓','reports')}${card('Low Stock',low.length,ico('alert'),'lowstock')}${card('Incoming',data.deliveries.filter(d=>d.status==='Scheduled').length,ico('receiving'),'receiving')}</div>
+ <div class="dashboard-grid"><div class="dashboard-main">
+  <section class="panel inventory-overview"><div class="section-heading"><h2>INVENTORY ALERTS</h2><button class="link" data-go="inventory">See All</button></div><div class="product-strip">${products.map(p=>`<button class="product-tile" data-product="${esc(p.id)}"><span class="product-art-wrap">${productArt(p)}</span><span class="product-stock">${p.qty} ${p.category==='Packaging'?'pc':p.category==='Bakery'?'cs':'kg'} · ${esc(status(p).toUpperCase())}</span><b>${esc(p.name)}</b></button>`).join('')}</div></section>
+  <section class="panel"><div class="section-heading"><h2>RECENT ACTIVITIES</h2><button class="link" data-go="movement">View all</button></div>${data.movements.slice(0,4).map(m=>`<div class="orderitem"><div><b>${esc(m.type)} · ${esc(product(m.productId)?.name||m.productId)}</b><div class="muted">${esc(m.user)} · ${fmt(m.date)}</div></div><b>${m.delta>0?'+':''}${m.delta}</b></div>`).join('')||'<p class="muted">No recent movements yet.</p>'}</section>
+ </div><aside class="dashboard-rail">
+  <section class="panel"><div class="section-heading"><h2>EVENTS</h2><button class="link" data-go="receiving">All</button></div>${events.map(d=>`<button class="event-item" data-delivery="${esc(d.id)}"><span class="event-date"><small>${esc(d.date.slice(5,7))}</small><b>${esc(d.date.slice(8,10))}</b></span><span><b>${esc(d.supplier)}</b><small>${esc(product(d.productId)?.name||'Delivery')} · ${esc(d.date)}</small>${pill(d.status)}</span></button>`).join('')||'<p class="muted">No upcoming events.</p>'}</section>
+  <section class="panel"><div class="section-heading"><h2>APPOINTMENTS</h2><button class="link" data-go="receiving">View calendar</button></div>${events.slice(0,2).map(d=>`<button class="appointment-item" data-delivery="${esc(d.id)}"><span>${ico('calendar',16)}</span><b>${esc(d.date)} · ${esc(d.supplier)}</b></button>`).join('')||'<p class="muted">No scheduled appointments.</p>'}</section>
+  <section class="panel"><div class="section-heading"><h2>LOW STOCK</h2><button class="link" data-go="lowstock">Review</button></div>${low.slice(0,3).map(p=>`<button class="compact-alert" data-product="${esc(p.id)}"><span>${productArt(p)}</span><b>${esc(p.name)}</b><small>${p.qty} on hand · reorder at ${p.min}</small></button>`).join('')||'<p class="muted">All products are sufficiently stocked.</p>'}</section>
+ </aside></div><section class="panel"><div class="section-heading"><h2>NOTIFICATIONS</h2><button class="link" data-go="notifications">Open notifications</button></div>${data.notifications.filter(n=>!n.read).slice(0,3).map(n=>`<div class="notice"><b>${esc(n.type)}</b><div>${esc(n.text)}</div></div>`).join('')||'<p class="muted">You are all caught up.</p>'}</section>`;
+}
